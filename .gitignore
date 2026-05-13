@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+training/images/
+training/dataset/
+db/*.db
+model/*.pt
+model/_train/
+.DS_Store
