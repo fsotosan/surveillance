@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
 class ActivityDB:
@@ -65,7 +66,7 @@ class ActivityDB:
         ''', (class_name, room_name, camera_number, dt_from, dt_to))
         conn.commit()
 
-    def query_activity(self, dt_from: str, dt_to: str, class_filter: str | None = None):
+    def query_activity(self, dt_from: str, dt_to: str, class_filter: Optional[str] = None):
         conn = self._get_conn()
         if class_filter:
             cur = conn.execute('''

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timedelta
+from typing import Optional
 
 
 def parse_video_filename(filename: str):
@@ -30,7 +31,7 @@ def parse_video_filename(filename: str):
     return room_name, camera_number, hub_name, start_dt
 
 
-def sample_frames(video_path, sampling_fps: float = 1, start_dt: datetime | None = None):
+def sample_frames(video_path, sampling_fps: float = 1, start_dt: Optional[datetime] = None):
     import cv2
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():

@@ -3,6 +3,7 @@ import os
 import time
 import re
 from collections import defaultdict
+from typing import Optional
 
 from surveillance import config
 from surveillance.db import ActivityDB
@@ -53,7 +54,7 @@ def run_surveillance(init_mode: bool = False):
     return 0
 
 
-def _get_latest_folder(root: str) -> str | None:
+def _get_latest_folder(root: str) -> Optional[str]:
     if not os.path.isdir(root):
         return None
     date_folders = []

@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from surveillance import config
 from surveillance.db import ActivityDB
@@ -6,7 +7,7 @@ from surveillance.db import ActivityDB
 logger = logging.getLogger(__name__)
 
 
-def run_report(dt_from: str, dt_to: str, class_filter: str | None = None):
+def run_report(dt_from: str, dt_to: str, class_filter: Optional[str] = None):
     db = ActivityDB(config.ACTIVITY_DB_PATH)
     rows = db.query_activity(dt_from, dt_to, class_filter)
     db.close()
