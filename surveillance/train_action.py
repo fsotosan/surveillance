@@ -45,7 +45,9 @@ def run_train(epochs: int = 100, imgsz: int = 640, batch: int = 16, export_only:
     images_root = Path(config.TRAINING_IMAGES_PATH)
 
     def _export(split_name, data):
-        for img in data:
+        for i, img in enumerate(data):
+            if i % 50 == 0 or i == len(data) - 1:
+                print(f"  Exporting {split_name}: {i + 1}/{len(data)} images", flush=True)
             src = images_root / img['relative_path']
             if not src.exists():
                 continue
@@ -64,6 +66,7 @@ def run_train(epochs: int = 100, imgsz: int = 640, batch: int = 16, export_only:
                 label_path = dataset_dir / 'labels' / split_name / f"{img['id']:06d}.txt"
                 label_path.write_text('\n'.join(lines))
 
+    print("Exporting dataset...", flush=True)
     _export('train', train_set)
     _export('val', val_set)
 
@@ -136,12 +139,20 @@ def _generate_labeled_preview(dataset_dir: Path, class_names: list):
     ]
 
     count = 0
+    total_count = sum(1 for split in ('train', 'val')
+                      for img_dir in [dataset_dir / 'images' / split]
+                      if img_dir.is_dir()
+                      for _ in img_dir.iterdir()
+                      if _.suffix.lower() in ('.jpg', '.jpeg', '.png'))
+
     for split in ('train', 'val'):
         img_dir = dataset_dir / 'images' / split
         label_dir = dataset_dir / 'labels' / split
         if not img_dir.is_dir():
             continue
-        for img_path in sorted(img_dir.iterdir()):
+        for j, img_path in enumerate(sorted(img_dir.iterdir())):
+            if j % 50 == 0:
+                print(f"  Generating preview: {count + 1}/{total_count}", flush=True)
             if img_path.suffix.lower() not in ('.jpg', '.jpeg', '.png'):
                 continue
             label_path = label_dir / img_path.with_suffix('.txt').name
