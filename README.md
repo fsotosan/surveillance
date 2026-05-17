@@ -1,6 +1,6 @@
 # Surveillance — Person Activity Tracking from Video
 
-Track people and pets across your home security cameras using YOLO object detection. Designed for camera systems that upload motion-triggered video clips via FTP.
+Track people and pets across your home security cameras using YOLO object detection. Designed for camera systems that upload motion-triggered video clips (for example via FTP).
 
 ## Video file naming convention
 
@@ -43,6 +43,7 @@ All settings are controlled via environment variables:
 | `SURVEILLANCE_MERGE_WINDOW` | `300` | Seconds to merge consecutive detections of the same class/room |
 | `SURVEILLANCE_SAMPLING_FPS` | `1` | Frames per second to sample from video |
 | `SURVEILLANCE_POLL_INTERVAL` | `10` | Seconds between folder polls in surveillance mode |
+| `SURVEILLANCE_ACTIVITY_ROOT` | `activity_images` | Root folder for activity snapshot images |
 
 ## Usage
 
@@ -55,15 +56,18 @@ Global flags:
 ### `surveillance` — continuous monitoring
 
 ```bash
-python -m surveillance surveillance [--init]
+python -m surveillance surveillance [--init] [--bulk]
 ```
 
 Monitors the latest date folder under `VIDEO_ROOT_PATH`. For each new video:
 1. Runs YOLO prediction on sampled frames
 2. Detects named people (e.g. "dad", "mom", "grandma") or falls back to generic classes
 3. Merges consecutive same-room detections into single activity entries
+4. Saves labeled snapshot images (bounding-box visualizations) of the first and last detection frame per activity to `SURVEILLANCE_ACTIVITY_ROOT/YYYY-MM-DD/`
 
 `--init` — if no trained model exists at `model/best.pt`, auto-downloads and uses the base model (`yolo11n.pt`).
+
+`--bulk` — process all video folders under `VIDEO_ROOT_PATH` from oldest to newest, then exit. Useful for initial backfill of historical video data.
 
 ### `onboard` — generate training data
 
@@ -90,6 +94,19 @@ python -m surveillance train [--epochs 100] [--imgsz 640] [--batch 16] [--export
 Exports all onboarded images from the training database into a YOLO dataset (80/20 train/val split), backs up `model/best.pt`, trains a new model, and saves it to `model/best.pt`.
 
 `--export-only` — export the dataset and generate labeled preview images (bounding-box visualizations in `training/dataset/labeled_preview/`) without training. The dataset directory is left in place for review.
+
+#### Training in Google Colab (recommended for GPU)
+
+For faster training on a GPU, use the provided `train.ipynb` notebook in Google Colab:
+
+1. Upload `train.ipynb` to Google Drive or open it directly via Colab
+2. Mount your Drive and edit the configuration cell at the top:
+   - Set `REPO_URL` to your fork (if you forked the repo)
+   - Set `PARENT_DIR` to where the repo should live in Drive
+   - Point `TRAINING_IMAGES` and `TRAINING_DB` to your onboarded data
+3. Run all cells — the notebook clones/updates the repo, installs dependencies, and runs training
+
+The notebook uses `git pull` on subsequent runs, so you can re-run simply by updating the dataset and executing all cells again.
 
 ### `report` — query activity
 

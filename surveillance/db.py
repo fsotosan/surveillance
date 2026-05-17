@@ -24,7 +24,9 @@ class ActivityDB:
                 room_name TEXT NOT NULL,
                 camera_number TEXT NOT NULL,
                 datetime_from TEXT NOT NULL,
-                datetime_to TEXT NOT NULL
+                datetime_to TEXT NOT NULL,
+                img_first TEXT,
+                img_last TEXT
             )
         ''')
         conn.execute('''
@@ -38,9 +40,20 @@ class ActivityDB:
             )
         ''')
         conn.commit()
+        self._migrate_activity()
+
+    def _migrate_activity(self):
+        conn = self._get_conn()
+        for col in ('img_first', 'img_last'):
+            try:
+                conn.execute(f'ALTER TABLE activity ADD COLUMN {col} TEXT')
+            except sqlite3.OperationalError:
+                pass
+        conn.commit()
 
     def upsert_activity(self, class_name: str, room_name: str, camera_number: str,
-                        dt_from: str, dt_to: str, merge_window: int = 300):
+                        dt_from: str, dt_to: str, img_first: str = None,
+                        img_last: str = None, merge_window: int = 300):
         conn = self._get_conn()
         cur = conn.execute('''
             SELECT id, datetime_to FROM activity
@@ -55,15 +68,16 @@ class ActivityDB:
             last_end = datetime.fromisoformat(row['datetime_to'])
             delta = (current_end - last_end).total_seconds()
             if 0 <= delta <= merge_window:
-                conn.execute('UPDATE activity SET datetime_to = ? WHERE id = ?',
-                             (dt_to, row['id']))
+                conn.execute('UPDATE activity SET datetime_to = ?, img_last = ? WHERE id = ?',
+                             (dt_to, img_last, row['id']))
                 conn.commit()
                 return
 
         conn.execute('''
-            INSERT INTO activity (class_name, room_name, camera_number, datetime_from, datetime_to)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (class_name, room_name, camera_number, dt_from, dt_to))
+            INSERT INTO activity (class_name, room_name, camera_number,
+                                  datetime_from, datetime_to, img_first, img_last)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (class_name, room_name, camera_number, dt_from, dt_to, img_first, img_last))
         conn.commit()
 
     def query_activity(self, dt_from: str, dt_to: str, class_filter: Optional[str] = None):

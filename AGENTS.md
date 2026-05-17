@@ -38,6 +38,8 @@ surveillance/
 - **File stability**: Before processing a new video file, the system waits for its size to stabilise (2 consecutive identical reads).
 - **Processed file tracking**: Stored in `activity.db` `processed_files` table for persistence across restarts.
 - **`--init` flag**: Both `surveillance` and `onboard` commands support `--init`. When set, if no trained model exists at `model/best.pt`, the system falls back to `SURVEILLANCE_DEFAULT_MODEL` (e.g. `yolo11n.pt`), downloading it if needed.
+- **Activity snapshot images**: `surveil.py` saves labeled images (bounding-box visualizations) for the first and last detection frame of each activity row. Images are stored under `SURVEILLANCE_ACTIVITY_ROOT/YYYY-MM-DD/{roomname}_{timestamp}_{classes}.png`. The `activity` table has `img_first` and `img_last` columns tracking these paths relative to `ACTIVITY_ROOT_PATH`.
+- **Bulk mode**: `surveillance --bulk` processes all video folders under `VIDEO_ROOT_PATH` from oldest to newest, then exits. This is useful for initial backfill of historical video data.
 - **Device resolution**: `yolo_utils._resolve_device()` selects the best available device — MPS (Apple Silicon) > CUDA > CPU — with logging. The `SURVEILLANCE_DEVICE` env var overrides auto-detection.
 
 ## Development Rules
@@ -49,3 +51,4 @@ surveillance/
 5. The `run_train()` function copies images into a temporary `training/dataset/` directory. With `--export-only` the export happens but training is skipped, leaving the dataset in place for review. Otherwise the directory is deleted after training completes.
 6. When `--export-only` is used, `_generate_labeled_preview()` creates bounding-box visualizations in `training/dataset/labeled_preview/` for dataset verification.
 7. The surveillance loop in `run_surveillance()` always catches exceptions (including `KeyboardInterrupt`) to ensure clean database connection shutdown.
+8. **`train.ipynb`** is the Colab notebook for GPU-accelerated training. It parameterizes paths, repo URL, and training hyperparameters in a single config cell at the top. On subsequent runs it uses `git pull` instead of `git clone`. The `PARENT_DIR`/`REPO_DIR` variables control where the repo is placed in Drive.

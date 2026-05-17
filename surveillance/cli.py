@@ -15,6 +15,8 @@ def main():
 
     p = sub.add_parser('surveillance', help='Monitor video folder and track activity continuously')
     p.add_argument('--init', action='store_true', help='Use default YOLO model if no trained model exists')
+    p.add_argument('--bulk', action='store_true',
+                   help='Process all videos in VIDEO_ROOT historically and exit')
     p = sub.add_parser('onboard', help='Generate training data from a video')
     p.add_argument('video', help='Path to the input video file')
     p.add_argument('classname', help='Generic class to detect (e.g., person)')
@@ -41,7 +43,7 @@ def main():
 
     if args.action == 'surveillance':
         from surveillance.surveil import run_surveillance
-        sys.exit(run_surveillance(init_mode=args.init))
+        sys.exit(run_surveillance(init_mode=args.init, bulk_mode=args.bulk))
     elif args.action == 'onboard':
         from surveillance.onboard import run_onboard
         sys.exit(run_onboard(args.video, args.classname, args.username, init_mode=args.init))
